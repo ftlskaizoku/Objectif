@@ -1,6 +1,8 @@
 import { statusOf, streakOf, dueOn, colorOf, toggleDay, type Goal } from '../lib/goals';
 import { addDays, parse, today } from '../lib/dates';
 import Ring from '../components/Ring';
+import Icon from '../components/Icon';
+import InstallCard from '../components/InstallCard';
 import type { View } from '../App';
 
 export default function Dashboard({ goals, uid, name, go }: { goals: Goal[]; uid: string; name: string | null; go: (v: View) => void }) {
@@ -15,24 +17,25 @@ export default function Dashboard({ goals, uid, name, go }: { goals: Goal[]; uid
   const rate = completed + failed ? Math.round((completed / (completed + failed)) * 100) : null;
   const week = Array.from({ length: 7 }, (_, i) => addDays(t, i - 6));
   const msg = !due.length ? 'Rien de prévu aujourd’hui.' : done === due.length ? 'Journée parfaite !' : `Encore ${due.length - done} à cocher.`;
-  const tile = 'rounded-3xl bg-card p-4';
+  const tile = 'flex flex-col items-center rounded-3xl bg-card p-4';
   return (
     <>
       <p className="text-sm text-muted">{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       <h1 className="mb-5 font-display text-4xl font-extrabold">Bonjour{name ? `, ${name.split(' ')[0]}` : ''}</h1>
+      <InstallCard banner />
 
       <section className="flex items-center gap-5 rounded-[32px] bg-gradient-to-br from-iris to-iris2 p-6 text-onacc shadow-lg">
         <Ring size={104} pct={pct} label={`${done}/${due.length}`} color="currentColor" track="rgb(255 255 255 / .25)" />
         <div>
           <p className="font-display text-2xl font-extrabold leading-tight">{msg}</p>
-          <p className="mt-1 text-sm opacity-80">Meilleure série : {best} jour{best > 1 ? 's' : ''}</p>
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-sm font-medium"><Icon n="flame" size={16} />{best} jour{best > 1 ? 's' : ''} de série</p>
         </div>
       </section>
 
       <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-        <div className={tile}><p className="font-display text-3xl font-extrabold">{active.length}</p><p className="text-xs text-muted">en cours</p></div>
-        <div className={tile}><p className="font-display text-3xl font-extrabold">{completed}</p><p className="text-xs text-muted">atteints</p></div>
-        <div className={tile}><p className="font-display text-3xl font-extrabold">{rate === null ? '–' : `${rate}%`}</p><p className="text-xs text-muted">réussite</p></div>
+        <div className={tile}><span className="text-iris"><Icon n="goals" size={22} /></span><p className="font-display text-3xl font-extrabold">{active.length}</p><p className="text-xs text-muted">en cours</p></div>
+        <div className={tile}><span className="text-iris"><Icon n="trophy" size={22} /></span><p className="font-display text-3xl font-extrabold">{completed}</p><p className="text-xs text-muted">atteints</p></div>
+        <div className={tile}><span className="text-iris"><Icon n="check" size={22} /></span><p className="font-display text-3xl font-extrabold">{rate === null ? '–' : `${rate}%`}</p><p className="text-xs text-muted">réussite</p></div>
       </div>
 
       <div className="mt-4 flex justify-between rounded-3xl bg-card p-4" aria-label="7 derniers jours">
@@ -62,7 +65,7 @@ export default function Dashboard({ goals, uid, name, go }: { goals: Goal[]; uid
                 <p className="text-xs text-muted">Jour {Math.min(g.durationDays, Math.round((parse(t).getTime() - parse(g.startDate).getTime()) / 864e5) + 1)} / {g.durationDays} · série {streakOf(g)}</p>
               </button>
               <button onClick={() => toggleDay(uid, g, t)} aria-pressed={ok} aria-label={ok ? 'Décocher' : 'Cocher'}
-                className={`grid h-12 w-12 place-items-center rounded-2xl text-xl font-bold transition ${ok ? 'pop bg-mint text-onmint' : 'bg-ink/10 text-transparent'}`}>✓</button>
+                className={`grid h-12 w-12 place-items-center rounded-2xl text-xl font-bold transition ${ok ? 'pop bg-mint text-onmint' : 'bg-ink/10 text-ink/25'}`}><Icon n="check" size={24} /></button>
             </div>
           );
         })}

@@ -15,7 +15,7 @@ export type View = { name: 'home' | 'calendar' | 'goals' | 'settings' | 'new' } 
 
 function Shell({ user }: { user: User }) {
   const { goals, error } = useGoals(user.uid);
-  const [view, setView] = useState<View>({ name: 'home' });
+  const [view, setView] = useState<View>(() => (new URLSearchParams(location.search).has('new') ? { name: 'new' } : { name: 'home' }));
   const go = setView;
   const tab = (name: 'home' | 'calendar' | 'goals' | 'settings', icon: string, label: string) => (
     <button onClick={() => go({ name })} aria-current={view.name === name} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium ${view.name === name ? 'text-iris' : 'text-muted'}`}>
@@ -38,7 +38,7 @@ function Shell({ user }: { user: User }) {
         <nav className="fixed inset-x-4 bottom-4 mx-auto flex max-w-md items-center rounded-[28px] bg-card/90 px-2 shadow-xl backdrop-blur" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
           {tab('home', 'today', 'Aujourd’hui')}{tab('calendar', 'calendar', 'Calendrier')}
           <button onClick={() => go({ name: 'new' })} aria-label="Nouvel objectif" className="-mt-7 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-iris to-iris2 text-onacc shadow-lg active:scale-95"><Icon n="plus" size={28} /></button>
-          {tab('goals', 'goals', 'Objectifs')}{tab('settings', 'themes', 'Thèmes')}
+          {tab('goals', 'goals', 'Objectifs')}{tab('settings', 'settings', 'Réglages')}
         </nav>
       )}
     </main>

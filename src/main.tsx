@@ -1,8 +1,10 @@
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import { initTheme } from './lib/theme';
+import { initInstall } from './lib/install';
 
 initTheme();
+initInstall();
 const root = createRoot(document.getElementById('root')!);
 if (!import.meta.env.VITE_FIREBASE_API_KEY) {
   root.render(

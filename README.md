@@ -21,3 +21,10 @@ Pousser sur GitHub, importer le dépôt dans Vercel (preset Vite) et ajouter les
 2. Firebase > Firestore Database : la base doit être créée et `firestore.rules` publié.
 3. Firebase > Authentication > Domaines autorisés : ajouter le domaine `*.vercel.app` de l'app.
 L'app affiche maintenant un message explicite pour chacun de ces cas.
+
+## Installation de l'app (PWA)
+- **Android / Chrome, Edge (ordinateur)** : bouton « Installer l'application » dans Réglages (et bannière sur l'accueil).
+- **iPhone / iPad** : Safari → Partager → « Sur l'écran d'accueil » (instructions affichées dans l'app).
+- **Mac Safari** : Fichier → Ajouter au Dock.
+L'installation exige HTTPS (Vercel) et un déploiement de production (`npm run build`).
+Icônes : `public/icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, `favicon.svg`.
