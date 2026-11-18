@@ -7,13 +7,22 @@ export type Goal = { id: string; title: string; startDate: string; durationDays:
 export type Status = 'active' | 'completed' | 'failed';
 
 export function useGoals(uid: string) {
-  const [goals, setGoals] = useState<Goal[] | null>(null);
+  const [s, setS] = useState<{ goals: Goal[] | null; error: string }>({ goals: null, error: '' });
   useEffect(() => onSnapshot(
     query(collection(db, 'users', uid, 'goals'), orderBy('createdAt', 'desc')),
-    (s) => setGoals(s.docs.map((d) => ({ id: d.id, ...d.data() }) as Goal)),
+    (snap) => setS({ goals: snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Goal), error: '' }),
+    (err) => setS({ goals: [], error: err.code === 'permission-denied'
+      ? 'Accès refusé : publie les règles Firestore (fichier firestore.rules).'
+      : `Impossible de charger tes objectifs (${err.code}). Vérifie que la base Firestore est créée.` }),
   ), [uid]);
-  return goals;
+  return s;
 }
+
+export const dueOn = (goals: Goal[], day: string) => goals.filter((g) => day >= g.startDate && day <= g.endDate);
+export const colorOf = (id: string) => {
+  let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return `hsl(${h} 70% 55%)`;
+};
 
 export const createGoal = (uid: string, title: string, startDate: string, durationDays: number) =>
   addDoc(collection(db, 'users', uid, 'goals'), {

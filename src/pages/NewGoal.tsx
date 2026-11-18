@@ -15,7 +15,7 @@ export default function NewGoal({ user, go }: { user: User; go: (v: View) => voi
     createGoal(user.uid, title.trim(), start, days); // sans await : fonctionne aussi hors-ligne
     go({ name: 'home' });
   };
-  const field = 'mt-1.5 w-full rounded-2xl bg-white px-4 py-3.5';
+  const field = 'mt-1.5 w-full rounded-2xl bg-card px-4 py-3.5';
   return (
     <form onSubmit={submit}>
       <button type="button" onClick={() => go({ name: 'home' })} className="mb-4 text-sm font-medium text-iris">‹ Retour</button>
@@ -30,7 +30,7 @@ export default function NewGoal({ user, go }: { user: User; go: (v: View) => voi
         <input type="number" inputMode="numeric" min={1} max={365} value={days} onChange={(e) => setDays(Number(e.target.value))} className={field} />
       </label>
       {days >= 1 && <p className="mt-5 rounded-2xl bg-iris/10 p-4 text-iris">Échéance : <b>{prettyDate(addDays(start, days - 1))}</b></p>}
-      <button disabled={!valid} className="mt-8 w-full rounded-2xl bg-iris py-4 font-bold text-white disabled:opacity-40 active:scale-[.98]">Créer l’objectif</button>
+      <button disabled={!valid} className="mt-8 w-full rounded-2xl bg-iris py-4 font-bold text-onacc disabled:opacity-40 active:scale-[.98]">Créer l’objectif</button>
     </form>
   );
 }

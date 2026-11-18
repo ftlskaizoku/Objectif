@@ -1,57 +1,72 @@
-import type { User } from 'firebase/auth';
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase';
-import { useGoals, statusOf, toggleDay, type Goal } from '../lib/goals';
-import { today, prettyDate } from '../lib/dates';
+import { statusOf, streakOf, dueOn, colorOf, toggleDay, type Goal } from '../lib/goals';
+import { addDays, parse, today } from '../lib/dates';
 import Ring from '../components/Ring';
 import type { View } from '../App';
 
-function Card({ g, uid, go }: { g: Goal; uid: string; go: (v: View) => void }) {
-  const t = today(), st = statusOf(g), done = g.completedDays.includes(t);
-  const inRange = t >= g.startDate && t <= g.endDate;
-  return (
-    <article className="rounded-[28px] bg-white p-4 shadow-[0_8px_30px_-12px_rgba(91,91,240,.35)]">
-      <button onClick={() => go({ name: 'goal', id: g.id })} className="flex w-full items-center gap-4 text-left">
-        <Ring pct={g.completedDays.length / g.durationDays} />
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate font-display text-xl font-extrabold">{g.title}</h3>
-          <p className="text-sm text-ink/60">
-            {st === 'completed' ? 'Objectif atteint 🎉' : st === 'failed' ? `Terminé le ${prettyDate(g.endDate)}` : t < g.startDate ? `Commence le ${prettyDate(g.startDate)}` : `${g.completedDays.length} / ${g.durationDays} jours`}
-          </p>
-        </div>
-      </button>
-      {st === 'active' && inRange && (
-        <button onClick={() => toggleDay(uid, g, t)} aria-pressed={done}
-          className={`mt-4 w-full rounded-2xl py-3.5 font-bold transition active:scale-[.98] ${done ? 'bg-mint text-ink' : 'bg-iris text-white'}`}>
-          {done ? '✓ Fait aujourd’hui' : 'Marquer comme fait'}
-        </button>
-      )}
-    </article>
-  );
-}
-
-export default function Dashboard({ user, go }: { user: User; go: (v: View) => void }) {
-  const goals = useGoals(user.uid);
-  const active = goals?.filter((g) => statusOf(g) === 'active') ?? [];
-  const past = goals?.filter((g) => statusOf(g) !== 'active') ?? [];
+export default function Dashboard({ goals, uid, name, go }: { goals: Goal[]; uid: string; name: string | null; go: (v: View) => void }) {
+  const t = today();
+  const due = dueOn(goals, t).filter((g) => statusOf(g) !== 'failed');
+  const done = due.filter((g) => g.completedDays.includes(t)).length;
+  const pct = due.length ? done / due.length : 0;
+  const active = goals.filter((g) => statusOf(g) === 'active');
+  const completed = goals.filter((g) => statusOf(g) === 'completed').length;
+  const failed = goals.filter((g) => statusOf(g) === 'failed').length;
+  const best = Math.max(0, ...active.map(streakOf));
+  const rate = completed + failed ? Math.round((completed / (completed + failed)) * 100) : null;
+  const week = Array.from({ length: 7 }, (_, i) => addDays(t, i - 6));
+  const msg = !due.length ? 'Rien de prévu aujourd’hui.' : done === due.length ? 'Journée parfaite !' : `Encore ${due.length - done} à cocher.`;
+  const tile = 'rounded-3xl bg-card p-4';
   return (
     <>
-      <header className="mb-6 flex items-center justify-between">
+      <p className="text-sm text-muted">{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+      <h1 className="mb-5 font-display text-4xl font-extrabold">Bonjour{name ? `, ${name.split(' ')[0]}` : ''}</h1>
+
+      <section className="flex items-center gap-5 rounded-[32px] bg-gradient-to-br from-iris to-iris2 p-6 text-onacc shadow-lg">
+        <Ring size={104} pct={pct} label={`${done}/${due.length}`} color="currentColor" track="rgb(255 255 255 / .25)" />
         <div>
-          <p className="text-sm text-ink/60">{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-          <h1 className="font-display text-4xl font-extrabold">Aujourd’hui</h1>
+          <p className="font-display text-2xl font-extrabold leading-tight">{msg}</p>
+          <p className="mt-1 text-sm opacity-80">Meilleure série : {best} jour{best > 1 ? 's' : ''}</p>
         </div>
-        <button onClick={() => signOut(auth)} className="text-sm font-medium text-ink/60">Déconnexion</button>
-      </header>
-      {goals === null && <p className="text-ink/60">Chargement…</p>}
-      {goals?.length === 0 && <p className="rounded-3xl bg-white p-6 text-ink/70">Aucun objectif pour l’instant. Crée le premier : choisis une date de début et une durée.</p>}
-      <div className="flex flex-col gap-4">{active.map((g) => <Card key={g.id} g={g} uid={user.uid} go={go} />)}</div>
-      {past.length > 0 && <>
-        <h2 className="mt-9 mb-3 font-display text-xl font-extrabold">Historique</h2>
-        <div className="flex flex-col gap-4 opacity-80">{past.map((g) => <Card key={g.id} g={g} uid={user.uid} go={go} />)}</div>
-      </>}
-      <button onClick={() => go({ name: 'new' })} aria-label="Nouvel objectif"
-        className="fixed bottom-6 right-6 grid h-16 w-16 place-items-center rounded-full bg-ink text-3xl text-white shadow-xl active:scale-95">+</button>
+      </section>
+
+      <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+        <div className={tile}><p className="font-display text-3xl font-extrabold">{active.length}</p><p className="text-xs text-muted">en cours</p></div>
+        <div className={tile}><p className="font-display text-3xl font-extrabold">{completed}</p><p className="text-xs text-muted">atteints</p></div>
+        <div className={tile}><p className="font-display text-3xl font-extrabold">{rate === null ? '–' : `${rate}%`}</p><p className="text-xs text-muted">réussite</p></div>
+      </div>
+
+      <div className="mt-4 flex justify-between rounded-3xl bg-card p-4" aria-label="7 derniers jours">
+        {week.map((d) => {
+          const dd = dueOn(goals, d), n = dd.filter((g) => g.completedDays.includes(d)).length;
+          const full = dd.length > 0 && n === dd.length;
+          return (
+            <div key={d} className="flex flex-col items-center gap-1.5">
+              <span className="text-[11px] text-muted">{parse(d).toLocaleDateString('fr-FR', { weekday: 'narrow' })}</span>
+              <span className={`grid h-8 w-8 place-items-center rounded-full text-xs font-bold ${full ? 'bg-mint text-onmint' : n > 0 ? 'bg-mint/40' : 'bg-ink/10 text-muted'} ${d === t ? 'ring-2 ring-iris' : ''}`}>{parse(d).getDate()}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <h2 className="mt-7 mb-3 font-display text-xl font-extrabold">À faire aujourd’hui</h2>
+      {!goals.length && <p className="rounded-3xl bg-card p-5 text-muted">Aucun objectif pour l’instant. Touche le bouton + pour créer le premier.</p>}
+      {goals.length > 0 && !due.length && <p className="rounded-3xl bg-card p-5 text-muted">Aucun objectif à cocher aujourd’hui.</p>}
+      <div className="flex flex-col gap-3">
+        {due.map((g) => {
+          const ok = g.completedDays.includes(t);
+          return (
+            <div key={g.id} className="flex items-center gap-3 rounded-3xl bg-card p-3 pl-4">
+              <span className="h-10 w-1.5 rounded-full" style={{ background: colorOf(g.id) }} />
+              <button onClick={() => go({ name: 'goal', id: g.id })} className="min-w-0 flex-1 text-left">
+                <p className="truncate font-bold">{g.title}</p>
+                <p className="text-xs text-muted">Jour {Math.min(g.durationDays, Math.round((parse(t).getTime() - parse(g.startDate).getTime()) / 864e5) + 1)} / {g.durationDays} · série {streakOf(g)}</p>
+              </button>
+              <button onClick={() => toggleDay(uid, g, t)} aria-pressed={ok} aria-label={ok ? 'Décocher' : 'Cocher'}
+                className={`grid h-12 w-12 place-items-center rounded-2xl text-xl font-bold transition ${ok ? 'pop bg-mint text-onmint' : 'bg-ink/10 text-transparent'}`}>✓</button>
+            </div>
+          );
+        })}
+      </div>
     </>
   );
 }

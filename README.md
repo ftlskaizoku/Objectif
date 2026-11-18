@@ -15,3 +15,9 @@ React + Vite + Tailwind 4 · Firebase (Auth + Firestore) · Vercel.
 
 ## Déploiement
 Pousser sur GitHub, importer le dépôt dans Vercel (preset Vite) et ajouter les 4 variables `VITE_FIREBASE_*`.
+
+## Si l'écran reste vide ou bloqué sur « Chargement »
+1. Vercel > Settings > Environment Variables : les 4 variables `VITE_FIREBASE_*` doivent exister, puis **redéployer**.
+2. Firebase > Firestore Database : la base doit être créée et `firestore.rules` publié.
+3. Firebase > Authentication > Domaines autorisés : ajouter le domaine `*.vercel.app` de l'app.
+L'app affiche maintenant un message explicite pour chacun de ces cas.
