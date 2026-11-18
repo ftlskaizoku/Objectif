@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@theme {
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --color-paper: #F1F3FF;
+  --color-ink: #14173A;
+  --color-iris: #5B5BF0;
+  --color-mint: #2FD6A3;
+  --color-rose: #F4A6A6;
+}
+body { background: var(--color-paper); color: var(--color-ink); font-family: var(--font-sans); padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--color-iris); outline-offset: 2px; }
